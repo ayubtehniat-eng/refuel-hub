@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REFUELING STATION | Cosmic Command</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap');
+
+        :root {
+            --cmd-cyan: #00f2ff;
+            --space-black: #020617;
+            --panel-bg: rgba(10, 25, 47, 0.98);
+            --gold: #ffd700;
+        }
+
+        body {
+            background: var(--space-black);
+            color: #fff;
+            font-family: 'Share Tech Mono', monospace;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-image: radial-gradient(circle at center, #112244 0%, #020617 100%);
+        }
+
+        #command-center {
+            width: 90%;
+            max-width: 900px;
+            background: var(--panel-bg);
+            border: 1px solid var(--cmd-cyan);
+            box-shadow: 0 0 40px rgba(0, 242, 255, 0.2);
+            padding: 40px;
+            border-radius: 4px;
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--gold);
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            border-bottom: 2px solid var(--cmd-cyan);
+            padding-bottom: 10px;
+        }
+
+        .status-header {
+            display: flex;
+            justify-content: space-between;
+            color: var(--cmd-cyan);
+            font-size: 0.8em;
+            margin-bottom: 20px;
+        }
+
+        .instruction-box {
+            background: rgba(0, 242, 255, 0.05);
+            border-left: 4px solid var(--gold);
+            padding: 20px;
+            margin: 20px 0;
+            line-height: 1.6;
+        }
+
+        .btn-action {
+            background: transparent;
+            border: 2px solid var(--gold);
+            color: var(--gold);
+            padding: 15px 35px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            text-transform: uppercase;
+        }
+
+        .btn-action:hover {
+            background: var(--gold);
+            color: #000;
+            box-shadow: 0 0 20px var(--gold);
+        }
+
+        .option-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .opt-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(0, 242, 255, 0.3);
+            color: #fff;
+            padding: 18px;
+            cursor: pointer;
+            font-family: inherit;
+            text-align: left;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .opt-btn:hover {
+            background: rgba(0, 242, 255, 0.15);
+            border-color: var(--cmd-cyan);
+        }
+
+        #progress-track {
+            width: 100%;
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            margin: 15px 0;
+        }
+
+        #progress-fill {
+            height: 100%;
+            background: var(--cmd-cyan);
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+
+        .commander-call {
+            color: var(--gold);
+            font-size: 1.2em;
+            font-weight: bold;
+            padding: 20px;
+            border: 2px dashed var(--gold);
+            margin-top: 20px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="command-center">
+    <div id="start-screen">
+        <div class="status-header">
+            <span>STATION: 04-REFUEL</span>
+            <span>OS: COSMIC-OS v3.0</span>
+        </div>
+        <h1>REFUELING STATION</h1>
+        <div class="instruction-box">
+            <p><strong>MISSION ORDERS:</strong></p>
+            <p>> Fuel reserves critical. Automated sequence locked.</p>
+            <p>> You must perform a 30-parameter technical verification to bypass security.</p>
+            <p>> <strong>Pass Threshold:</strong> 20 Correct Identifications.</p>
+        </div>
+        <center><button class="btn-action" onclick="initiate()">Initiate Verification</button></center>
+    </div>
+
+    <div id="quiz-screen" style="display:none;">
+        <div class="status-header">
+            <span>PARAMETER: <span id="q-num">01</span>/30</span>
+            <span>THRESHOLD: 20</span>
+        </div>
+        <div id="progress-track"><div id="progress-fill"></div></div>
+        <h3 id="question-text" style="min-height: 80px; color: var(--gold); font-size: 1.1em; line-height: 1.4;"></h3>
+        <div class="option-grid" id="option-grid"></div>
+    </div>
+
+    <div id="result-screen" style="display:none; text-align: center;">
+        <h1 id="res-status"></h1>
+        <div id="res-score" style="font-size: 4em; margin: 10px 0;"></div>
+        
+        <div id="success-message" style="display:none;">
+            <p>Verification successful. Fuel cells are charging.</p>
+            <div class="commander-call">
+                CALL A COMMANDER IMMEDIATELY TO PROCEED!
+            </div>
+        </div>
+
+        <div id="fail-message" style="display:none;">
+            <p>Data accuracy insufficient. Refueling sequence aborted.</p>
+            <button class="btn-action" onclick="location.reload()" style="margin-top:20px;">Reboot System</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const technicalData = [
+        { q: "If the distance between two planets is doubled, the gravitational force becomes:", a: "One-fourth", o: ["Double", "Half", "One-fourth", "Four times"] },
+        { q: "Which factor does NOT affect the gravitational force between two objects?", a: "Volume of the objects", o: ["Mass of object 1", "Volume of the objects", "Distance between them", "Mass of object 2"] },
+        { q: "The value of 'G' (Universal Gravitational Constant) is:", a: "The same everywhere in the universe", o: ["Different on the Moon", "The same everywhere in the universe", "Zero in space", "Dependent on planet size"] },
+        { q: "If Earth shrinks to 50% of its radius but keeps the same mass, your weight becomes:", a: "Four times", o: ["Half", "Double", "Four times", "Zero"] },
+        { q: "What is the SI unit for the Gravitational Constant (G)?", a: "Nm²/kg²", o: ["N/kg", "Nm²/kg²", "m/s²", "kg-m/s"] },
+        { q: "At what height above Earth's surface does the value of 'g' become 25% of its surface value?", a: "R (One Earth Radius)", o: ["2R", "0.5R", "R (One Earth Radius)", "4R"] },
+        { q: "What is the value of 'g' (acceleration due to gravity) at the center of the Earth?", a: "Zero", o: ["9.8 m/s²", "Infinite", "Zero", "-9.8 m/s²"] },
+        { q: "If you go to the Moon, which quantity remains constant?", a: "Mass", o: ["Weight", "Mass", "Gravitational pull", "Air resistance"] },
+        { q: "Two spheres of equal density touch. If you double their radius, the gravitational force increases:", a: "16 times", o: ["2 times", "4 times", "8 times", "16 times"] },
+        { q: "Ocean tides on Earth are primarily caused by:", a: "The Moon's gravitational pull", o: ["The Sun's heat", "Earth's rotation", "The Moon's gravitational pull", "Global warming"] },
+        { q: "Two objects of different masses dropped in a vacuum fall:", a: "At the same rate", o: ["Heavier one first", "Lighter one first", "At the same rate", "They float"] },
+        { q: "A spring balance measures:", a: "Weight", o: ["Mass", "Weight", "Density", "Volume"] },
+        { q: "For a satellite in circular orbit, the centripetal force is provided by:", a: "Gravitational force", o: ["Rocket thrusters", "Gravitational force", "Solar wind", "Friction"] },
+        { q: "If a satellite moves to a higher orbit (larger radius), its orbital speed must:", a: "Decrease", o: ["Increase", "Decrease", "Stay the same", "Become zero"] },
+        { q: "A geostationary satellite has an orbital period of:", a: "24 hours", o: ["90 minutes", "365 days", "24 hours", "12 hours"] },
+        { q: "At which point in an elliptical orbit does a planet have maximum Kinetic Energy?", a: "Perihelion", o: ["Aphelion", "Perihelion", "The center", "Constant everywhere"] },
+        { q: "Kepler's Second Law: A planet sweeps out equal ____ in equal time.", a: "Areas", o: ["Distances", "Areas", "Velocities", "Arcs"] },
+        { q: "What shape are most planetary orbits?", a: "Ellipses", o: ["Perfect circles", "Ellipses", "Parabolas", "Squares"] },
+        { q: "The work done by gravity on a satellite in a circular orbit is:", a: "Zero", o: ["Positive", "Negative", "Zero", "Infinite"] },
+        { q: "Why do astronauts feel 'weightless' in the ISS?", a: "They are in constant freefall", o: ["There is no gravity there", "They are in constant freefall", "The air is too thin", "The suit lifts them"] },
+        { q: "If you are inside a hollow spherical shell of uniform mass, the gravitational field inside is:", a: "Zero everywhere", o: ["Strongest at the center", "Strongest near the walls", "Zero everywhere", "Variable"] },
+        { q: "According to Relativity, as you move faster through space, you move:", a: "Slower through time", o: ["Faster through time", "Slower through time", "Backwards in time", "At the same rate"] },
+        { q: "Where would a clock tick the slowest?", a: "Near a Black Hole", o: ["Deep space", "On the Moon", "On Earth", "Near a Black Hole"] },
+        { q: "Muons reaching the ground despite short half-lives is proof of:", a: "Time Dilation", o: ["Newton's Laws", "Time Dilation", "Quantum Tunneling", "Atmospheric Reflection"] },
+        { q: "Massive objects like the Sun can do what to light?", a: "Bend its path", o: ["Stop it completely", "Bend its path", "Speed it up", "Turn it into sound"] },
+        { q: "Astronomers identify elements in distant stars by analyzing:", a: "Spectral lines", o: ["Star brightness", "Star size", "Spectral lines", "Star rotation"] },
+        { q: "If a star's spectral lines shift toward RED, it is:", a: "Moving away from us", o: ["Moving toward us", "Moving away from us", "Stationary", "Getting hotter"] },
+        { q: "Blueshift indicates that a light source is:", a: "Moving closer", o: ["Cooling down", "Moving away", "Moving closer", "Running out of fuel"] },
+        { q: "Why do we see an Absorption spectrum from most stars?", a: "Cooler atmosphere absorbs core light", o: ["The star is solid", "Cooler atmosphere absorbs core light", "The core absorbs its own light", "Interstellar space is empty"] },
+        { q: "Which color of visible light has the highest frequency?", a: "Violet", o: ["Red", "Green", "Yellow", "Violet"] }
+    ];
+
+    let currentTestSet = [];
+    let userScore = 0;
+    let currentIdx = 0;
+
+    function initiate() {
+        document.getElementById('start-screen').style.display = 'none';
+        document.getElementById('quiz-screen').style.display = 'block';
+        currentTestSet = [...technicalData].sort(() => 0.5 - Math.random());
+        showParam();
+    }
+
+    function showParam() {
+        const data = currentTestSet[currentIdx];
+        document.getElementById('q-num').innerText = String(currentIdx + 1).padStart(2, '0');
+        document.getElementById('progress-fill').style.width = (currentIdx / 30 * 100) + "%";
+        document.getElementById('question-text').innerText = data.q;
+        const grid = document.getElementById('option-grid');
+        grid.innerHTML = '';
+        [...data.o].sort(() => 0.5 - Math.random()).forEach(o => {
+            const btn = document.createElement('button');
+            btn.className = 'opt-btn';
+            btn.innerText = o;
+            btn.onclick = () => {
+                if(o === data.a) userScore++;
+                currentIdx++;
+                if(currentIdx < 30) showParam(); else renderFinal();
+            };
+            grid.appendChild(btn);
+        });
+    }
+
+    function renderFinal() {
+        document.getElementById('quiz-screen').style.display = 'none';
+        const res = document.getElementById('result-screen');
+        res.style.display = 'block';
+        const passed = userScore >= 20;
+        document.getElementById('res-status').innerText = passed ? "SYSTEM AUTHORIZED" : "AUTHORIZATION DENIED";
+        document.getElementById('res-status').style.color = passed ? "var(--cmd-cyan)" : "#ff4b2b";
+        document.getElementById('res-score').innerText = `${userScore}/30`;
+        
+        if(passed) {
+            document.getElementById('success-message').style.display = 'block';
+        } else {
+            document.getElementById('fail-message').style.display = 'block';
+        }
+    }
+</script>
+</body>
+</html>
